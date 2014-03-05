@@ -1,5 +1,5 @@
 ﻿<#@ template language="C#" debug="true"  #>
-<#@ output extension=".cs" #>
+<#@ output extension=".java" #>
 <#@ assembly name="System.dll" #>
 <#@ import namespace="System" #>
 <#@ import namespace="System.Collections.Generic" #>
@@ -8,26 +8,30 @@
 <#@ parameter name="Profile" type="DofusProtocolBuilder.Profiles.ParsingProfile" #>
 <#@ include file="./Helper.tt"#>
 // Generated on <#= DateTime.Now #>
-using System;
-using System.Collections.Generic;
+package <#= Profile.OutPutNamespace #>;
 
-namespace <#= Profile.OutPutNamespace #>
-{
-<# PushIndent("    "); #>
-public enum <#= Parser.Class.Name #>
-{
+public enum <#= Parser.Class.Name #> {
 <# PushIndent("    "); #>
 <#
 foreach (var field in Parser.Fields)
 {
-    Write(field.Name);
-    Write(" = ");
-    Write(field.Value);
-    Write(",");
-    WriteLine("");
-} 
+	WriteLine("{0}({1}),", field.Name, field.Value);
+}
 #>
-<# PopIndent(); #>
+
+public final int value;
+
+private <#= Parser.Class.Name #>(int value) {
+	this.value = value;
+}
+
+public static <#= Parser.Class.Name #> valueOf(int value) {
+	for (<#= Parser.Class.Name #> v : values()) {
+		if (v.value == value) {
+			return v;
+		}
+	}
+	return null;
 }
 <# PopIndent(); #>
 }
