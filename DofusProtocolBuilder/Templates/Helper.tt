@@ -50,12 +50,7 @@ void WriteField(FieldInfo field)
 
 void WriteField(XmlField field)
 {
-    Write("public ");
-
-    Write(GetRealType(field.Type));
-    Write(" " + field.Name);
-
-    WriteLine(";");
+	WriteLine("public {0} {1};", GetRealType(field.Type), field.Name);
 } 
     
 XmlField[] GetHierarchyFields(XmlMessage message)
@@ -107,7 +102,7 @@ void WriteIOMethodStatements(IEnumerable<XmlField> fields, bool serializeMethod)
 			{
 				if (!serializeMethod)
 				{
-					WriteLine((limitDefined ? string.Empty : "var ") + "limit = reader.ReadUShort();");
+					WriteLine((limitDefined ? string.Empty : "int ") + "limit = reader.readUInt16();");
 					limitDefined = true;
 				}
 
@@ -115,10 +110,7 @@ void WriteIOMethodStatements(IEnumerable<XmlField> fields, bool serializeMethod)
 
 				if (serializeMethod)
 				{
-                    if (Program.Configuration.UseIEnumerable)
-						WriteLine("writer.WriteUShort((ushort)" + name + ".Count());");
-					else
-						WriteLine("writer.WriteUShort((ushort)" + name + ".Length);");
+					WriteLine("writer.writeUInt16(" + name + ".length);");
 				}
 			}
 
@@ -127,19 +119,15 @@ void WriteIOMethodStatements(IEnumerable<XmlField> fields, bool serializeMethod)
 			if (!serializeMethod)
 			{
                 WriteLine(string.Format("{0} = new {1}[{2}];", name, GetRealType(type), limit));
-				WriteLine("for (int i = 0; i < " + limit + "; i++)");
-				WriteLine("{");
-				PushIndent("     ");
+				WriteLine("for (int i = 0; i < {0}; i++) {{", limit);
+				PushIndent("    ");
 
-                name = Program.Configuration.UseIEnumerable ?
-                    string.Format("({0} as {1}[])[i]", name, GetRealType(type)) :
-					name + "[i]";
+                name += "[i]";
 			}
 			else
 			{
-				WriteLine("foreach (var entry in " + field.Name + ")");
-				WriteLine("{");
-				PushIndent("     ");
+				WriteLine("for ({0} entry : {1}) {{", GetRealType(type), field.Name);
+				PushIndent("    ");
 
                 name = "entry";
 			}
@@ -149,7 +137,7 @@ void WriteIOMethodStatements(IEnumerable<XmlField> fields, bool serializeMethod)
 			(lastFlagOffset.HasValue && flagsCount.HasValue) &&
 			(lastFlagOffset.Value >= 7 || !type.StartsWith("flag") ))
 		{
-			WriteLine("writer.WriteByte(flag" + flagsCount + ");");
+			WriteLine("writer.writeUInt16(flag" + flagsCount + ");");
 			lastFlagOffset = null;
 		}
 
@@ -164,28 +152,28 @@ void WriteIOMethodStatements(IEnumerable<XmlField> fields, bool serializeMethod)
 					flagsCount = flagsCount.HasValue ? flagsCount + 1 : 1;
 
 					if (serializeMethod)
-						WriteLine("byte flag" + flagsCount + " = 0;");
+						WriteLine("char flag" + flagsCount + " = 0;");
 					else
-						WriteLine("byte flag" + flagsCount + " = reader.ReadByte();");
+						WriteLine("char flag" + flagsCount + " = reader.readUInt8();");
 				}
 
 				int flagOffset = int.Parse(match.Groups[1].Value);
 				lastFlagOffset = flagOffset;
 
 				if (serializeMethod)
-					WriteLine(string.Format("flag{0} = BooleanByteWrapper.SetFlag(flag{0}, {1}, {2});", flagsCount, flagOffset, name));
+					WriteLine(string.Format("flag{0} = BooleanByteWrapper.setFlag(flag{0}, {1}, {2});", flagsCount, flagOffset, name));
 				else
-					WriteLine(string.Format("{0} = BooleanByteWrapper.GetFlag(flag{1}, {2});", name, flagsCount, flagOffset));
+					WriteLine(string.Format("{0} = BooleanByteWrapper.getFlag(flag{1}, {2});", name, flagsCount, flagOffset));
 			}
 		}
 		else if (type.StartsWith("Types."))
 		{
 			if (serializeMethod)
-				WriteLine(string.Format("{0}.Serialize(writer);", name));
+				WriteLine(string.Format("{0}.serialize(writer);", name));
 			else
 			{
 				WriteLine(string.Format("{0} = new {1}();", name, type));
-				WriteLine(string.Format("{0}.Deserialize(reader);", name));
+				WriteLine(string.Format("{0}.deserialize(reader);", name));
 			}
 		}
 		else if (type.StartsWith("instance of"))
@@ -193,8 +181,8 @@ void WriteIOMethodStatements(IEnumerable<XmlField> fields, bool serializeMethod)
          
 			if (serializeMethod)
 			{
-				WriteLine(string.Format("writer.WriteShort({0}.TypeId);", name));
-				WriteLine(string.Format("{0}.Serialize(writer);", name));
+				WriteLine(string.Format("writer.writeInt16((short) {0}.getTypeId());", name));
+				WriteLine(string.Format("{0}.serialize(writer);", name));
 			}
 			else
 			{            
@@ -204,8 +192,8 @@ void WriteIOMethodStatements(IEnumerable<XmlField> fields, bool serializeMethod)
 				{  
 					string instanceType = match.Groups[1].Value;
                     
-					WriteLine(string.Format("{0} = Types.ProtocolTypeManager.GetInstance<{1}>(reader.ReadShort());", name, instanceType));
-					WriteLine(string.Format("{0}.Deserialize(reader);", name));
+					WriteLine(string.Format("{0} = Types.ProtocolTypeManager.GetInstance<{1}>(reader.readInt16());", name, instanceType));
+					WriteLine(string.Format("{0}.deserialize(reader);", name));
 				}
 				else
 					Error(string.Format("Type {0} doesn't match 'instance of ([\\w\\d_\\.]+)'", type));
@@ -214,20 +202,21 @@ void WriteIOMethodStatements(IEnumerable<XmlField> fields, bool serializeMethod)
 		else
 		{
 			if (serializeMethod)
-				WriteLine(string.Format("writer.Write{0}({1});", GetIOMethodTypeName(type), name));
+				WriteLine(string.Format("writer.write{0}({1});", GetIOMethodTypeName(type), name));
 			else
-				WriteLine(string.Format("{0} = reader.Read{1}();", name, GetIOMethodTypeName(type)));
+				WriteLine(string.Format("{0} = reader.read{1}();", name, GetIOMethodTypeName(type)));
 		}
         
 		if (!string.IsNullOrEmpty(field.Condition))
 		{
 			if (!serializeMethod)
 			{
-				WriteLine("if (" + field.Condition + ")");
+				WriteLine("if ({0}) {{", field.Condition);
 				PushIndent("    ");
-				WriteLine(string.Format("throw new Exception(\"Forbidden value on {0} = \" + {0} + \", " + 
-					"it doesn't respect the following condition : {1}\");", name, field.Condition));
+				WriteLine("throw new IllegalStateException(\"Forbidden value on {0} = \" + {0} + \", " + 
+					"it doesn't respect the following condition : {1}\");", name, field.Condition);
 				PopIndent();
+				WriteLine("}");
 			}
 		}
 
@@ -241,7 +230,7 @@ void WriteIOMethodStatements(IEnumerable<XmlField> fields, bool serializeMethod)
     if (lastFlagOffset.HasValue)
     {
         if (serializeMethod)
-			WriteLine("writer.WriteByte(flag" + flagsCount + ");");
+			WriteLine("writer.writeUInt8(flag" + flagsCount + ");");
     }
 }
 
@@ -254,21 +243,25 @@ string GetRealType(string rawType)
 
     if (match.Success)
     {
-        if (Program.Configuration.UseIEnumerable)
-            return "IEnumerable<" + GetRealType(match.Groups[1].Value) + ">";
-
         return GetRealType(match.Groups[1].Value) + "[]";
     }
 
     if (rawType.StartsWith("flag"))
-        return "bool";
+        return "boolean";
+
+	if (rawType.StartsWith("Types."))
+		return rawType.Replace("Types.", "");
 
     switch (rawType)
     {
         case "utf":
-            return "string";
-        case "boolean":
-            return "bool";
+            return "String";
+        //case "boolean":
+        //    return "bool";
+		case "sbyte":
+			return "byte";
+		case "byte":
+			return "char";
         default:
             return rawType;
     }
@@ -276,6 +269,17 @@ string GetRealType(string rawType)
     
 string GetIOMethodTypeName(string rawType)
 {
+	switch (rawType) {
+		case "sbyte":  return "Int8";
+		case "byte":   return "UInt8";
+		case "short":  return "Int16";
+		case "ushort": return "UInt16";
+		case "int":    return "Int32";
+		case "uint":   return "UInt32";
+		case "long":   return "Int64";
+		case "ulong":  return "UInt64";
+    }
+
     if (rawType.StartsWith("instance of "))
         rawType = rawType.Replace("instance of ", "");
 

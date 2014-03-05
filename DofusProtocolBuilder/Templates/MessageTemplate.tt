@@ -1,5 +1,5 @@
 ﻿<#@ template language="C#" debug="true"  #>
-<#@ output extension=".cs" #>
+<#@ output extension=".java" #>
 <#@ assembly name="System.dll" #>
 <#@ import namespace="System" #>
 <#@ import namespace="System.Linq" #>
@@ -9,23 +9,19 @@
 <#@ parameter name="Profile" type="DofusProtocolBuilder.Profiles.ParsingProfile" #>
 <#@ include file="./Helper.tt"#>
 // Generated on <#= DateTime.Now #>
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using <#=Program.Configuration.BaseNamespace + ".Types" #>;
-using BiM.Core.IO;
-using BiM.Core.Network;
+package <#= Profile.OutPutNamespace #>;
 
-namespace <#= Profile.OutPutNamespace #>
-{
+import <#=Program.Configuration.BaseNamespace #>.types.*;
+import org.behaviorismanaged.core.io.*;
+import org.behaviorismanaged.core.network.*;
+
+public class <#= Message.Name #> extends <#= !string.IsNullOrEmpty(Message.Heritage) && Message.Heritage != "Message" ? Message.Heritage : "NetworkMessage" #> {
 <# PushIndent("    "); #>
-public class <#= Message.Name #><#= !string.IsNullOrEmpty(Message.Heritage) && Message.Heritage != "Message" ? " : " + Message.Heritage : " : NetworkMessage" #>
-{
-<# PushIndent("    "); #>
-public const uint Id = <#= Message.Id #>;
-public override uint MessageId
-{
-    get { return Id; }
+public static final long PROTOCOL_ID = <#= Message.Id #>L;
+
+@Override
+public long getProtocolId() {
+	return PROTOCOL_ID;
 }
 
 <#
@@ -35,16 +31,14 @@ foreach (var field in Message.Fields)
 } 
 #>
 
-public <#= Message.Name #>()
-{
-}
+public <#= Message.Name #>() { }
 
 <#
     var baseFields = GetHierarchyFields(Message);
 
     if (Message.Fields.Length + baseFields.Length > 0)
     {
-        Write("public " + Message.Name + "(");
+        Write("public {0}(", Message.Name);
 
         if (baseFields.Length > 0)
         {
@@ -59,11 +53,13 @@ public <#= Message.Name #>()
             Write(string.Join(", ", Message.Fields.Select(field => GetRealType(field.Type) + " " + field.Name)));
         }
 
-        WriteLine(")");
-        if (baseFields.Length > 0)
-            WriteLine(" : base(" + string.Join(", ", baseFields.Select(field => field.Name)) + ")");
-        WriteLine("{");
+        WriteLine(") {");
+
         PushIndent("    ");
+
+        if (baseFields.Length > 0)
+            WriteLine("super({0});", string.Join(", ", baseFields.Select(field => field.Name)));
+
 
         foreach (var field in Message.Fields)
         {
@@ -75,13 +71,13 @@ public <#= Message.Name #>()
     }
 #>
 
-public override void Serialize(IDataWriter writer)
-{
+@Override
+public void serialize(DataWriter writer) {
 <# PushIndent("    "); #>
 <#
     if (Message.Heritage != "Message")
     {
-        WriteLine("base.Serialize(writer);");
+        WriteLine("super.serialize(writer);");
     }
 
     WriteIOMethodStatements(Message.Fields, true);
@@ -89,20 +85,17 @@ public override void Serialize(IDataWriter writer)
 <# PopIndent(); #>
 }
 
-public override void Deserialize(IDataReader reader)
-{
+@Override
+public void deserialize(DataReader reader) {
 <# PushIndent("    "); #>
 <#
     if (Message.Heritage != "Message")
     {
-        WriteLine("base.Deserialize(reader);");
+        WriteLine("super.deserialize(reader);");
     }
 
     WriteIOMethodStatements(Message.Fields, false);
 #>
-<# PopIndent(); #>
-}
-
 <# PopIndent(); #>
 }
 
