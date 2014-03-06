@@ -1,5 +1,5 @@
 ﻿<#@ template language="C#" debug="true"  #>
-<#@ output extension=".cs" #>
+<#@ output extension=".java" #>
 <#@ assembly name="System.dll" #>
 <#@ import namespace="System" #>
 <#@ import namespace="System.Linq" #>
@@ -9,22 +9,19 @@
 <#@ parameter name="Profile" type="DofusProtocolBuilder.Profiles.ParsingProfile" #>
 <#@ include file="./Helper.tt"#>
 // Generated on <#= DateTime.Now #>
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using BiM.Core.IO;
+package <#= Profile.OutPutNamespace #>;
 
-namespace <#= Profile.OutPutNamespace #>
-{
+import <#= Program.Configuration.BaseNamespace #>.enums.*;
+import org.behaviorismanaged.core.io.*;
+import org.behaviorismanaged.core.network.*;
+
+public class <#= Type.Name #> extends <#= !string.IsNullOrEmpty(Type.Heritage) && Type.Heritage != "Object" ? Type.Heritage : "NetworkType" #> {
 <# PushIndent("    "); #>
-public class <#= Type.Name #><#= !string.IsNullOrEmpty(Type.Heritage) && Type.Heritage != "Object" ? " : " + Type.Heritage : string.Empty  #>
-{
-<# PushIndent("    "); #>
-public const short Id = <#=Type.Id #>;
-public <#= !string.IsNullOrEmpty(Type.Heritage)
-        && Type.Heritage != "Object" ? "override" : "virtual" #> short TypeId
-{
-    get { return Id; }
+public static final short PROTOCOL_ID = <#=Type.Id #>;
+
+@Override
+public short getProtocolId() {
+    return PROTOCOL_ID;
 }
 
 <#
@@ -34,9 +31,7 @@ foreach (var field in Type.Fields)
 } 
 #>
 
-public <#=Type.Name #>()
-{
-}
+public <#=Type.Name #>() { }
 
 <#
     var baseFields = GetHierarchyFields(Type);
@@ -58,11 +53,11 @@ public <#=Type.Name #>()
             Write(string.Join(", ", Type.Fields.Select(field => GetRealType(field.Type) + " " + field.Name)));
         }
 
-        WriteLine(")");
-        if (baseFields.Length > 0)
-            WriteLine(" : base(" + string.Join(", ", baseFields.Select(field => field.Name)) + ")");
-        WriteLine("{");
+        WriteLine(") {");
         PushIndent("    ");
+
+        if (baseFields.Length > 0)
+            WriteLine("super(" + string.Join(", ", baseFields.Select(field => field.Name)) + ");");
 
         foreach (var field in Type.Fields)
         {
@@ -74,15 +69,14 @@ public <#=Type.Name #>()
     }
 #>
 
-public <#= !string.IsNullOrEmpty(Type.Heritage)
-        && Type.Heritage != "Object" ? "override" : "virtual" #> void Serialize(IDataWriter writer)
-{
+@Override
+public void serialize(DataWriter writer) {
 <# PushIndent("    "); #>
 <#
     if (!string.IsNullOrEmpty(Type.Heritage)
         && Type.Heritage != "Object")
     {
-        WriteLine("base.Serialize(writer);");
+        WriteLine("super.serialize(writer);");
     }
 
     WriteIOMethodStatements(Type.Fields, true);
@@ -90,22 +84,18 @@ public <#= !string.IsNullOrEmpty(Type.Heritage)
 <# PopIndent(); #>
 }
 
-public <#= !string.IsNullOrEmpty(Type.Heritage)
-        && Type.Heritage != "Object" ? "override" : "virtual" #> void Deserialize(IDataReader reader)
-{
+@Override
+public void deserialize(DataReader reader) {
 <# PushIndent("    "); #>
 <#
     if (!string.IsNullOrEmpty(Type.Heritage)
         && Type.Heritage != "Object")
     {
-        WriteLine("base.Deserialize(reader);");
+        WriteLine("super.deserialize(reader);");
     }
 
     WriteIOMethodStatements(Type.Fields, false);
 #>
-<# PopIndent(); #>
-}
-
 <# PopIndent(); #>
 }
 
