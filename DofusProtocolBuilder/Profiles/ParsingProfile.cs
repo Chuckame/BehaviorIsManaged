@@ -79,6 +79,11 @@ namespace DofusProtocolBuilder.Profiles
         /// </summary>
         public string GetRelativePath(string file)
         {
+            if (Program.Configuration.FlatHierarchy)
+            {
+                return "";
+            }
+
             string folder = Path.GetDirectoryName(file);
             string[] foldersSplitted = folder.Split(new[] {SourcePath.Replace("/", "\\")}, StringSplitOptions.RemoveEmptyEntries); // cut the source path and the "rest" of the path
 

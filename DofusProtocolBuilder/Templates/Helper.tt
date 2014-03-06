@@ -172,7 +172,7 @@ void WriteIOMethodStatements(IEnumerable<XmlField> fields, bool serializeMethod)
 				WriteLine(string.Format("{0}.serialize(writer);", name));
 			else
 			{
-				WriteLine(string.Format("{0} = new {1}();", name, type));
+				WriteLine(string.Format("{0} = new {1}();", name, type.Replace("Types.", "")));
 				WriteLine(string.Format("{0}.deserialize(reader);", name));
 			}
 		}
@@ -181,7 +181,7 @@ void WriteIOMethodStatements(IEnumerable<XmlField> fields, bool serializeMethod)
          
 			if (serializeMethod)
 			{
-				WriteLine(string.Format("writer.writeInt16({0}.getTypeId());", name));
+				WriteLine(string.Format("writer.writeInt16({0}.getProtocolId());", name));
 				WriteLine(string.Format("{0}.serialize(writer);", name));
 			}
 			else
@@ -190,9 +190,9 @@ void WriteIOMethodStatements(IEnumerable<XmlField> fields, bool serializeMethod)
 
 				if (match.Success)
 				{  
-					string instanceType = match.Groups[1].Value;
+					string instanceType = match.Groups[1].Value.Replace("Types.", "");
                     
-					WriteLine(string.Format("{0} = ProtocolTypeManager.build(reader.readInt16());", name, instanceType));
+					WriteLine(string.Format("{0} = ({1}) ProtocolTypeManager.getInstance().build(reader.readInt16()).get();", name, instanceType));
 					WriteLine(string.Format("{0}.deserialize(reader);", name));
 				}
 				else
@@ -207,18 +207,18 @@ void WriteIOMethodStatements(IEnumerable<XmlField> fields, bool serializeMethod)
 				WriteLine(string.Format("{0} = reader.read{1}();", name, GetIOMethodTypeName(type)));
 		}
         
-		if (!string.IsNullOrEmpty(field.Condition))
-		{
-			if (!serializeMethod)
-			{
-				WriteLine("if ({0}) {{", field.Condition);
-				PushIndent("    ");
-				WriteLine("throw new IllegalStateException(\"Forbidden value on {0} = \" + {0} + \", " + 
-					"it doesn't respect the following condition : {1}\");", name, field.Condition);
-				PopIndent();
-				WriteLine("}");
-			}
-		}
+		//if (!string.IsNullOrEmpty(field.Condition))
+		//{
+		//	if (!serializeMethod)
+		//	{
+		//		WriteLine("if ({0}) {{", field.Condition);
+		//		PushIndent("    ");
+		//		WriteLine("throw new IllegalStateException(\"Forbidden value on {0} = \" + {0} + \", " + 
+		//			"it doesn't respect the following condition : {1}\");", name, field.Condition);
+		//		PopIndent();
+		//		WriteLine("}");
+		//	}
+		//}
 
 		if (array)
 		{
@@ -249,7 +249,7 @@ string GetRealType(string rawType)
     if (rawType.StartsWith("flag"))
         return "boolean";
 
-    if (rawType.StartsWith("Types."))
+    if (rawType.Contains("Types."))
         return rawType.Replace("Types.", "");
 
     switch (rawType)

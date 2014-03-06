@@ -11,10 +11,18 @@
 // Generated on <#= DateTime.Now #>
 package <#= Profile.OutPutNamespace #>;
 
+import <#= Program.Configuration.BaseNamespace #>.ProtocolTypeManager;
 import <#= Program.Configuration.BaseNamespace #>.enums.*;
 import org.behaviorismanaged.core.io.*;
 import org.behaviorismanaged.core.network.*;
 
+<#
+	if (Program.Configuration.UseLombok)
+    {
+		WriteLine("@lombok.ToString(callSuper={0}, includeFieldNames=true)", !string.IsNullOrEmpty(Type.Heritage) && Type.Heritage != "Object" ? "true" : "false");
+		WriteLine("@lombok.EqualsAndHashCode(callSuper={0})", !string.IsNullOrEmpty(Type.Heritage) && Type.Heritage != "Object" ? "true" : "false");
+    }
+#>
 public class <#= Type.Name #> extends <#= !string.IsNullOrEmpty(Type.Heritage) && Type.Heritage != "Object" ? Type.Heritage : "NetworkType" #> {
 <# PushIndent("    "); #>
 public static final short PROTOCOL_ID = <#=Type.Id #>;

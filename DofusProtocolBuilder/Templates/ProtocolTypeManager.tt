@@ -1,0 +1,37 @@
+﻿<#@ template language="C#" debug="true"  #>
+<#@ output extension=".java" #>
+<#@ assembly name="System.dll" #>
+<#@ import namespace="System" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="DofusProtocolBuilder.Parsing" #>
+<#@ parameter name="Types" type="System.Collections.Generic.List<DofusProtocolBuilder.XmlPatterns.XmlType>" #>
+<#@ include file="./Helper.tt"#>
+// Generated on <#= DateTime.Now #>
+package <#= Program.Configuration.BaseNamespace #>;
+
+import org.behaviorismanaged.core.network.BaseProtocolTypeManager;
+import <#= Program.Configuration.BaseNamespace #>.types.*;
+
+public class ProtocolTypeManager extends BaseProtocolTypeManager {
+<# PushIndent("    "); #>
+private static ProtocolTypeManager INSTANCE;
+public static ProtocolTypeManager getInstance() {
+<# PushIndent("    "); #>
+if (INSTANCE == null) INSTANCE = new ProtocolTypeManager();
+return INSTANCE;
+<# PopIndent(); #>
+}
+
+public ProtocolTypeManager() {
+<# PushIndent("    "); #>
+<#
+	foreach (var t in Types.OrderBy(x => int.Parse(x.Id)))
+    {
+		WriteLine("register({0}, {1}::new);", t.Id, t.Name);
+    }
+#>
+<# PopIndent(); #>
+}
+<# PopIndent(); #>
+}

@@ -30,6 +30,30 @@ namespace DofusProtocolBuilder
             set;
         }
 
+        public string MessageReceiverTemplate
+        {
+            get;
+            set;
+        }
+
+        public string ProtocolTypeManagerTemplate
+        {
+            get;
+            set;
+        }
+
+        public bool FlatHierarchy
+        {
+            get;
+            set;
+        }
+
+        public bool UseLombok
+        {
+            get;
+            set;
+        }
+
         public XmlMessagesProfile XmlMessagesProfile
         {
             get;

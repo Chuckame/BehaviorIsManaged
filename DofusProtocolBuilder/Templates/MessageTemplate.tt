@@ -11,11 +11,19 @@
 // Generated on <#= DateTime.Now #>
 package <#= Profile.OutPutNamespace #>;
 
+import <#= Program.Configuration.BaseNamespace #>.ProtocolTypeManager;
 import <#= Program.Configuration.BaseNamespace #>.enums.*;
 import <#= Program.Configuration.BaseNamespace #>.types.*;
 import org.behaviorismanaged.core.io.*;
 import org.behaviorismanaged.core.network.*;
 
+<#
+	if (Program.Configuration.UseLombok)
+    {
+		WriteLine("@lombok.ToString(callSuper={0}, includeFieldNames=true)", !string.IsNullOrEmpty(Message.Heritage) && Message.Heritage != "Message" ? "true" : "false");
+		WriteLine("@lombok.EqualsAndHashCode(callSuper={0})", !string.IsNullOrEmpty(Message.Heritage) && Message.Heritage != "Message" ? "true" : "false");
+    }
+#>
 public class <#= Message.Name #> extends <#= !string.IsNullOrEmpty(Message.Heritage) && Message.Heritage != "Message" ? Message.Heritage : "NetworkMessage" #> {
 <# PushIndent("    "); #>
 public static final long PROTOCOL_ID = <#= Message.Id #>L;

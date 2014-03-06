@@ -1,0 +1,38 @@
+﻿<#@ template language="C#" debug="true"  #>
+<#@ output extension=".java" #>
+<#@ assembly name="System.dll" #>
+<#@ import namespace="System" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="DofusProtocolBuilder.Parsing" #>
+<#@ parameter name="Messages" type="System.Collections.Generic.List<DofusProtocolBuilder.XmlPatterns.XmlMessage>" #>
+<#@ include file="./Helper.tt"#>
+// Generated on <#= DateTime.Now #>
+package <#= Program.Configuration.BaseNamespace #>;
+
+import org.behaviorismanaged.core.network.BaseMessageReceiver;
+import <#= Program.Configuration.BaseNamespace #>.messages.*;
+
+public class MessageReceiver extends BaseMessageReceiver {
+<# PushIndent("    "); #>
+private static MessageReceiver INSTANCE;
+
+public static MessageReceiver getInstance() {
+<# PushIndent("    "); #>
+if (INSTANCE == null) INSTANCE = new MessageReceiver();
+return INSTANCE;
+<# PopIndent(); #>
+}
+
+public MessageReceiver() {
+<# PushIndent("    "); #>
+<#
+	foreach (var msg in Messages.OrderBy(x => int.Parse(x.Id)))
+    {
+		WriteLine("register({0}L, {1}::new);", msg.Id, msg.Name);
+    }
+#>
+<# PopIndent(); #>
+}
+<# PopIndent(); #>
+}

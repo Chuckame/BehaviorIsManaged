@@ -1,5 +1,8 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using DofusProtocolBuilder.Parsing;
@@ -17,10 +20,11 @@ namespace DofusProtocolBuilder.Profiles
                         {@"param(\d+)", @"arg$1"},
                         // Sothink -> Trillix variable synthax
                         {@"_loc_(\d+)", @"loc$1"},
-                        {@"(var\s|this\.)base(?![\w\d])", @"$1@base"},
+                        {@"(var\s|this\.)base(?![\w\d])", @"$1base"},
                         // add '@' on variable name that are keyword in c#,
-                        {@"(var\s|this\.)object(?![\w\d])", @"$1@object"},
-                        {@"(var\s|this\.)operator(?![\w\d])", @"$1@operator"},
+                        {@"(var\s|this\.)object(?![\w\d])", @"$1obj"},
+                        {@"(var\s|this\.)operator(?![\w\d])", @"$1op"},
+                        {@"(var\s|this\.)class(?![\w\d])", @"$1klass"},
                         // operator to @operator because it's a keyword
 
                         {@"this\.", string.Empty},
@@ -54,7 +58,7 @@ namespace DofusProtocolBuilder.Profiles
                         // convert super keyword to C# base keyword
 
                         // add a cast and preffix Enums before each enum
-                        {@"\b(\w+)Enum\.", "(byte)Enums.$1Enum."}
+                        {@"\b(\w+)Enum\.", "$1Enum.value"}
                     };
         }
 
@@ -68,6 +72,13 @@ namespace DofusProtocolBuilder.Profiles
             var deserializer = new XmlSerializer(typeof (XmlType));
 
             return (XmlType) deserializer.Deserialize(XmlReader.Create(results[0]));
+        }
+
+        public IEnumerable<XmlType> SearchTypes()
+        {
+            var deserializer = new XmlSerializer(typeof (XmlType));
+            return Directory.GetFiles(Path.Combine(Program.Configuration.Output, OutPutPath), "*.xml", SearchOption.AllDirectories)
+                .Select(x => (XmlType) deserializer.Deserialize(XmlReader.Create(x)));
         }
 
         public override void ExecuteProfile(Parser parser)

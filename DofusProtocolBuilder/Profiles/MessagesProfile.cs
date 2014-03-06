@@ -15,8 +15,17 @@ namespace DofusProtocolBuilder.Profiles
     {
         public override void ExecuteProfile(Parser parser)
         {
-            string file = Path.Combine(Program.Configuration.Output, OutPutPath, GetRelativePath(parser.Filename), Path.GetFileNameWithoutExtension(parser.Filename));
-            var xmlMessage = Program.Configuration.XmlMessagesProfile.SearchXmlPattern(Path.GetFileNameWithoutExtension(parser.Filename));
+            string file = Path.Combine(
+                Program.Configuration.Output,
+                OutPutPath,
+                GetRelativePath(parser.Filename),
+                // ReSharper disable once AssignNullToNotNullAttribute
+                Path.GetFileNameWithoutExtension(parser.Filename)
+            );
+
+            var xmlMessages = Program.Configuration.XmlMessagesProfile;
+
+            var xmlMessage = xmlMessages.SearchXmlPattern(Path.GetFileNameWithoutExtension(parser.Filename));
 
             if (xmlMessage == null)
                 Program.Shutdown(string.Format("File {0} not found", file));

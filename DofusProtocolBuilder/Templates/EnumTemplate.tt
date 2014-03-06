@@ -13,11 +13,13 @@ package <#= Profile.OutPutNamespace #>;
 public enum <#= Parser.Class.Name #> {
 <# PushIndent("    "); #>
 <#
-foreach (var field in Parser.Fields)
-{
-	WriteLine("{0}({1}),", field.Name, field.Value);
-}
+//foreach (var field in Parser.Fields)
+//{
+//	WriteLine("{0}({1}),", field.Name, field.Value);
+//}
 #>
+
+<#= string.Join(",\n    ", Parser.Fields.Select(x => string.Format("{0}({1})", x.Name, x.Value))) #>;
 
 public final int value;
 

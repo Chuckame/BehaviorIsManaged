@@ -2,12 +2,14 @@
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Xml;
 using System.Xml.Serialization;
 using DofusProtocolBuilder.Parsing;
 using DofusProtocolBuilder.Profiles;
 using DofusProtocolBuilder.Templates;
+using DofusProtocolBuilder.XmlPatterns;
 using Microsoft.VisualStudio.TextTemplating;
 
 
@@ -127,6 +129,24 @@ namespace DofusProtocolBuilder
 
                 Console.WriteLine("Done !");
             }
+
+            if (Configuration.XmlMessagesProfile != null)
+            {
+                Template(Configuration.MessageReceiverTemplate, Path.Combine(Configuration.Output, "MessageReceiver"), host =>
+                {
+                    var messages = Configuration.XmlMessagesProfile.SearchMessages().ToList();
+                    host.Session["Messages"] = messages;
+                });
+            }
+
+            if (Configuration.XmlTypesProfile != null)
+            {
+                Template(Configuration.ProtocolTypeManagerTemplate, Path.Combine(Configuration.Output, "ProtocolTypeManager"), host =>
+                {
+                    var types = Configuration.XmlTypesProfile.SearchTypes().ToList();
+                    host.Session["Types"] = types;
+                });
+            }
         }
 
         private static void DeleteDirectory(string targetDir)
@@ -161,6 +181,27 @@ namespace DofusProtocolBuilder
             Console.Read();
 
             Environment.Exit(0);
+        }
+
+        public delegate void Bindings(TemplateHost host);
+
+        public static void Template(string templatePath, string outputPath, Bindings b)
+        {
+            var engine = new Engine();
+            var host = new TemplateHost(templatePath);
+            b(host);
+
+            var output = engine.ProcessTemplate(File.ReadAllText(templatePath), host);
+
+            foreach (CompilerError error in host.Errors)
+            {
+                Console.WriteLine(error.ErrorText);
+            }
+
+            if (host.Errors.Count > 0)
+                return;
+
+            File.WriteAllText(outputPath + host.FileExtension, output);
         }
     }
 }
