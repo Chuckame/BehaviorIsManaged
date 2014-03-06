@@ -11,7 +11,8 @@
 // Generated on <#= DateTime.Now #>
 package <#= Profile.OutPutNamespace #>;
 
-import <#=Program.Configuration.BaseNamespace #>.types.*;
+import <#= Program.Configuration.BaseNamespace #>.enums.*;
+import <#= Program.Configuration.BaseNamespace #>.types.*;
 import org.behaviorismanaged.core.io.*;
 import org.behaviorismanaged.core.network.*;
 
