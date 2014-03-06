@@ -152,9 +152,9 @@ void WriteIOMethodStatements(IEnumerable<XmlField> fields, bool serializeMethod)
 					flagsCount = flagsCount.HasValue ? flagsCount + 1 : 1;
 
 					if (serializeMethod)
-						WriteLine("char flag" + flagsCount + " = 0;");
+						WriteLine("short flag" + flagsCount + " = 0;");
 					else
-						WriteLine("char flag" + flagsCount + " = reader.readUInt8();");
+						WriteLine("short flag" + flagsCount + " = reader.readUInt8();");
 				}
 
 				int flagOffset = int.Parse(match.Groups[1].Value);
@@ -181,7 +181,7 @@ void WriteIOMethodStatements(IEnumerable<XmlField> fields, bool serializeMethod)
          
 			if (serializeMethod)
 			{
-				WriteLine(string.Format("writer.writeInt16((short) {0}.getTypeId());", name));
+				WriteLine(string.Format("writer.writeInt16({0}.getTypeId());", name));
 				WriteLine(string.Format("{0}.serialize(writer);", name));
 			}
 			else
@@ -192,7 +192,7 @@ void WriteIOMethodStatements(IEnumerable<XmlField> fields, bool serializeMethod)
 				{  
 					string instanceType = match.Groups[1].Value;
                     
-					WriteLine(string.Format("{0} = Types.ProtocolTypeManager.GetInstance<{1}>(reader.readInt16());", name, instanceType));
+					WriteLine(string.Format("{0} = ProtocolTypeManager.build(reader.readInt16());", name, instanceType));
 					WriteLine(string.Format("{0}.deserialize(reader);", name));
 				}
 				else
@@ -249,21 +249,18 @@ string GetRealType(string rawType)
     if (rawType.StartsWith("flag"))
         return "boolean";
 
-	if (rawType.StartsWith("Types."))
-		return rawType.Replace("Types.", "");
+    if (rawType.StartsWith("Types."))
+        return rawType.Replace("Types.", "");
 
     switch (rawType)
     {
-        case "utf":
-            return "String";
-        //case "boolean":
-        //    return "bool";
-		case "sbyte":
-			return "byte";
-		case "byte":
-			return "char";
-        default:
-            return rawType;
+        case "utf":    return "String";
+        case "sbyte":  return "byte";
+        case "byte":   return "short";
+        case "ushort": return "int";
+        case "uint":   return "long";
+        case "ulong":  return "BigInteger";
+        default:       return rawType;
     }
 }
     
