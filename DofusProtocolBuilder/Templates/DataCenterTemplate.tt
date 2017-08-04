@@ -1,5 +1,5 @@
 ﻿<#@ template language="C#" debug="true"  #>
-<#@ output extension=".cs" #>
+<#@ output extension=".java" #>
 <#@ assembly name="System.dll" #>
 <#@ import namespace="System" #>
 <#@ import namespace="System.Collections.Generic" #>
@@ -7,25 +7,12 @@
 <#@ parameter name="Parser" type="DofusProtocolBuilder.Parsing.Parser" #>
 <#@ parameter name="Profile" type="DofusProtocolBuilder.Profiles.ParsingProfile" #>
 <#@ include file="./Helper.tt"#>
-// Generated on <#= DateTime.Now #>
-using System;
-using System.Collections.Generic;
-using BiM.Protocol.Tools;
-
-namespace <#= Profile.OutPutNamespace #>
+package <#= Profile.OutPutNamespace+'.'+Profile.GetRelativePath(Parser.Filename).Replace('\\', '.') #>;
 {
-<# PushIndent("    "); #>
-<#
-var module = Parser.Fields.FirstOrDefault(x => x.Name == "MODULE");
-
-if (module != null)
-    WriteLine(string.Format("[D2OClass({0})]", module.Value));
-else
-    WriteLine(string.Format("[D2OClass(\"{0}\")]", Parser.Class.Name));
-#>
-public class <#=Parser.Class.Name #><#=( Parser.Class.Heritage != "Object" ? " : " + Parser.Class.Heritage : " : IDataObject" ) #>
+<# PushIndent("\t"); #>
+public class <#=Parser.Class.Name #><#=( !string.IsNullOrEmpty(Parser.Class.Heritage) && Parser.Class.Heritage != "Object" ? " extends " + Parser.Class.Heritage : " implements java.io.Serializable" ) #>
 {
-<# PushIndent("    "); #>
+<# PushIndent("\t"); #>
 <#
 foreach (var field in Parser.Fields)
 {

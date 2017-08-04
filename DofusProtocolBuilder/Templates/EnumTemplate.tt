@@ -7,33 +7,31 @@
 <#@ parameter name="Parser" type="DofusProtocolBuilder.Parsing.Parser" #>
 <#@ parameter name="Profile" type="DofusProtocolBuilder.Profiles.ParsingProfile" #>
 <#@ include file="./Helper.tt"#>
-// Generated on <#= DateTime.Now #>
 package <#= Profile.OutPutNamespace #>;
 
+import java.util.Optional;
+
+@lombok.ToString
+@lombok.EqualsAndHashCode
+@lombok.AllArgsConstructor
 public enum <#= Parser.Class.Name #> {
-<# PushIndent("    "); #>
-<#
-//foreach (var field in Parser.Fields)
-//{
-//	WriteLine("{0}({1}),", field.Name, field.Value);
-//}
-#>
+<# PushIndent("\t"); #>
+<#= string.Join(",\n\t", Parser.Fields.Select(x => string.Format("{0}({1})", x.Name, x.Value))) #>;
 
-<#= string.Join(",\n    ", Parser.Fields.Select(x => string.Format("{0}({1})", x.Name, x.Value))) #>;
-
+@lombok.Getter
 public final int value;
 
 private <#= Parser.Class.Name #>(int value) {
 	this.value = value;
 }
 
-public static <#= Parser.Class.Name #> valueOf(int value) {
+public static Optional<<#= Parser.Class.Name #>> valueOf(int value) {
 	for (<#= Parser.Class.Name #> v : values()) {
 		if (v.value == value) {
-			return v;
+			return Optional.of(v);
 		}
 	}
-	return null;
+	return Optional.empty();
 }
 <# PopIndent(); #>
 }

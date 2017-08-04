@@ -24,6 +24,7 @@ namespace DofusProtocolBuilder.XmlPatterns
                 Name = Parser.Class.Name,
                 Id = Parser.Fields.Find(entry => entry.Name == "protocolId").Value,
                 Heritage = Parser.Class.Heritage,
+                RelativePath = Program.Configuration.MessagesProfile.GetRelativePath(Parser.Filename).Replace('\\', '.')
             };
             var xmlFields = new List<XmlField>();
 

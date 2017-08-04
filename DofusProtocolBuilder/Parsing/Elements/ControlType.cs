@@ -5,6 +5,7 @@ namespace DofusProtocolBuilder.Parsing.Elements
         If,
         Else,
         Elseif,
+        For,
         While,
         Break,
         Return

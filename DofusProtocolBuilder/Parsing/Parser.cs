@@ -11,7 +11,7 @@ namespace DofusProtocolBuilder.Parsing
     [Serializable]
 	public class Parser
 	{
-        public static readonly string ClassPatern = @"public class (\w+)\s";
+        public static readonly string ClassPatern = @"public\s*(final\s*)?class\s*(?<class>\w+)\s*";
         public static readonly string ClassHeritagePattern = @"extends (?:[\w_]+\.)*(\w+)";
         public static readonly string ConstructorPattern = @"(?<acces>public|protected|private|internal)\s*function\s*(?<name>{0})\((?<argument>[^,)]+,?)*\)";
         public static readonly string ConstFieldPattern = @"(?<acces>public|protected|private|internal)\s*(?<static>static)?\s*const\s*(?<name>\w+):(?<type>[\w_\.]+(?:<(?:\w+\.)*(?<generictype>[\w_<>]+)>)?)(?<value>\s*=\s*.*)?;";
@@ -102,7 +102,7 @@ namespace DofusProtocolBuilder.Parsing
 
 			Class = new ClassInfo
 			{
-				Name = GetMatch(ClassPatern),
+				Name = GetMatch(ClassPatern, 2),
 				Heritage = GetMatch(ClassHeritagePattern),
 				AccessModifier = AccessModifiers.Public,
 				// we don't mind about this
@@ -367,7 +367,13 @@ namespace DofusProtocolBuilder.Parsing
 
 				IStatement statement;
 
-				if (Regex.IsMatch(line, ControlStatement.Pattern))
+                if (Regex.IsMatch(line, ForStatement.Pattern))
+                {
+                    statement = ForStatement.Parse(line);
+                    controlsequenceDepth++;
+                }
+
+                else if (Regex.IsMatch(line, ControlStatement.Pattern))
 				{
 					statement = ControlStatement.Parse(line);
 					controlsequenceDepth++;

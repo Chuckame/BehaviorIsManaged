@@ -33,6 +33,13 @@ namespace DofusProtocolBuilder.XmlPatterns
             set;
         }
 
+        [XmlAttribute]
+        public string RelativePath
+        {
+            get;
+            set;
+        }
+
         public XmlField[] Fields
         {
             get;

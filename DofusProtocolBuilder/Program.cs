@@ -79,7 +79,7 @@ namespace DofusProtocolBuilder
 
             foreach (ParsingProfile parsingProfile in profiles)
             {
-                if (parsingProfile == null)
+                if (parsingProfile == null || !parsingProfile.EnableParsing)
                     continue;
 
                 Console.WriteLine("Executing profile \'{0}\' ... ", parsingProfile.Name);
@@ -115,12 +115,12 @@ namespace DofusProtocolBuilder
 
                     try
                     {
-                        if (parsingProfile.EnableParsing)
-                            parser.ParseFile();
+                        parser.ParseFile();
                     }
-                    catch (InvalidCodeFileException)
+                    catch (InvalidCodeFileException e)
                     {
-                        Console.WriteLine("File {0} not parsed correctly", Path.GetFileName(file));
+                        Console.WriteLine("File {0} not parsed correctly, type anything to continue... Error:\n{1}", Path.GetFileName(file), e);
+                        Console.Read();
                         continue;
                     }
 

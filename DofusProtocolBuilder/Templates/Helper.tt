@@ -5,9 +5,7 @@
 <#@ import namespace="System.Text.RegularExpressions" #>
 <#@ import namespace="DofusProtocolBuilder" #>
 <#@ import namespace="DofusProtocolBuilder.Parsing" #>
-<#@ import namespace="DofusProtocolBuilder.XmlPatterns" #>
-
-<#+
+<#@ import namespace="DofusProtocolBuilder.XmlPatterns" #><#+
 void WriteField(FieldInfo field)
 {
 	switch (field.Modifiers)
